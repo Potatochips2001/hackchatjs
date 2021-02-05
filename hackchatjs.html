@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script type="text/javascript">
+            var myMsg;
+            var sendMsg;
+            function connect(){
+                let nick = document.getElementById("nick").value;
+                let channel = document.getElementById("channel").value;
+                let userWebSocket = new WebSocket("wss://hack.chat/chat-ws")
+                var sendJoin = {
+                    "cmd": "join",
+                    "channel": channel,
+                    "nick": nick
+                };
+                //Join channel
+                userWebSocket.onopen = function(event){
+                    userWebSocket.send(JSON.stringify(sendJoin));
+                };
+                //On Message
+                userWebSocket.onmessage = function (event){
+                    let msgData = JSON.parse(event.data);
+                    console.log(msgData);
+                    if (msgData.text.includes("./color")){
+                        myMsg = "/color " + msgData.text.replace("./color ", "");
+                        myMsg = myMsg.toString();
+                        sendMsg = {
+                            "cmd": "chat",
+                            "text": myMsg
+                        };
+                        userWebSocket.send(JSON.stringify(sendMsg));
+                    }
+                    if (msgData.text.includes("./say")){
+                        myMsg = msgData.text.replace("./say", "");
+                        myMsg = myMsg.toString();
+                        sendMsg = {
+                            "cmd": "chat",
+                            "text": myMsg
+                        };
+                        userWebSocket.send(JSON.stringify(sendMsg));
+                    }
+                };
+            }
+        </script>
+    </head>
+    <body>
+        <label>Name</label>
+        <input id="nick">
+        <label>Channel</label>
+        <input id="channel">
+        <button onclick="connect()">Start</button>
+    </body>
+</html>
