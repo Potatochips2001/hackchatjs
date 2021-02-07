@@ -6,7 +6,12 @@
             var sendMsg;
             var ignored = [];
             var afkList = [];
+            let randomColors = false;
+            let uptime = 0.0;
             function connect(){
+                setInterval(function(){
+                    uptime++;
+                }, 1000);
                 let nick = document.getElementById("nick").value;
                 let channel = document.getElementById("channel").value;
                 let textOutput = document.getElementById("output");
@@ -24,10 +29,10 @@
                 userWebSocket.onmessage = function (event){
                     let msgData = JSON.parse(event.data);
                     //List commands
-                    if (msgData.text == "./help"){
+                    if (msgData.text == "./help"&&!ignored.includes(msgData.nick)){
                         myMsg = {
                             "cmd": "chat",
-                            "text": "```color, random, afk```"
+                            "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\ncolor, coloron/off, afk, random, uptime\nAdmin: ignore, accept, showignored"
                         };
                         userWebSocket.send(JSON.stringify(myMsg));
                     }
@@ -60,6 +65,21 @@
                         };
                         userWebSocket.send(JSON.stringify(sendMsg));
                     }
+                    //Random colors
+                    if (msgData.text == "./coloron"&&!ignored.includes(msgData.nick)){
+                        randomColors = true;
+                    }
+                    if (msgData.text == "./coloroff"&&!ignored.includes(msgData.nick)){
+                        randomColors = false;
+                    }
+                    if (randomColors == true && msgData.text.includes("./")){
+                        myMsg = "/color " + '#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0');
+                        myMsg = {
+                            "cmd": "chat",
+                            "text": myMsg
+                        };
+                        userWebSocket.send(JSON.stringify(myMsg));
+                    }
                     //Random number
                     if (msgData.text.includes("./random")&&!ignored.includes(msgData.nick)){
                         myMsg = msgData.text.replace("./random ", "");
@@ -79,6 +99,14 @@
                         myMsg = msgData.text.replace("./ignore ", "");
                         ignored.push(myMsg);
                         textOutput.innerText += "Ignoring " + myMsg + "\n";
+                    }
+                    //Show ignored users
+                    if (msgData.text == "./showignored" && msgData.trip == "21YRcd"){
+                        myMsg = {
+                            "cmd": "chat",
+                            "text": ignored.toString()
+                        };
+                        userWebSocket.send(JSON.stringify(myMsg));
                     }
                     //Remove users from ignore list
                     if (msgData.text.includes("./accept") && msgData.trip == "21YRcd"){
@@ -101,6 +129,17 @@
                             "text": msgData.nick + " is AFK"
                         };
                         afkList.push(msgData.nick);
+                        userWebSocket.send(JSON.stringify(myMsg));
+                    }
+                    if (msgData.text == "./uptime"&&!ignored.includes(msgData.nick)){
+                        var hours = Math.floor(uptime / 3600);
+                        var minutes = Math.floor((uptime - (hours * 3600)) / 60);
+                        var seconds = uptime - (hours * 3600) - (minutes * 60);
+                        myMsg = hours + "h " + minutes + "m " + seconds + "s";
+                        myMsg = {
+                            "cmd": "chat",
+                            "text": myMsg.toString()
+                        };
                         userWebSocket.send(JSON.stringify(myMsg));
                     }
                 };
