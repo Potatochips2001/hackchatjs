@@ -4,9 +4,12 @@
         <script type="text/javascript">
             var myMsg;
             var sendMsg;
+            var ignored = [];
+            var afkList = [];
             function connect(){
                 let nick = document.getElementById("nick").value;
                 let channel = document.getElementById("channel").value;
+                let textOutput = document.getElementById("output");
                 let userWebSocket = new WebSocket("wss://hack.chat/chat-ws")
                 var sendJoin = {
                     "cmd": "join",
@@ -20,8 +23,35 @@
                 //On Message
                 userWebSocket.onmessage = function (event){
                     let msgData = JSON.parse(event.data);
-                    console.log(msgData);
-                    if (msgData.text.includes("./color")){
+                    //List commands
+                    if (msgData.text == "./help"){
+                        myMsg = {
+                            "cmd": "chat",
+                            "text": "```color, random, afk```"
+                        };
+                        userWebSocket.send(JSON.stringify(myMsg));
+                    }
+                    //Auto remove user from AFK list if they type
+                    if (afkList.includes(msgData.nick)){
+                        afkList.splice(afkList.indexOf(msgData.nick, 1))
+                        myMsg = {
+                            "cmd": "chat",
+                            "text": "You are no longer AFK @" + msgData.nick
+                        };
+                        userWebSocket.send(JSON.stringify(myMsg));
+                    }
+                    //Check if user is AFK when messaged
+                    for (var i = 0; i < afkList.length; i++){
+                        if (msgData.text.includes("@" + afkList[i])){
+                            myMsg = {
+                                "cmd": "chat",
+                                "text": afkList[i] + " is AFK"
+                            };
+                            userWebSocket.send(JSON.stringify(myMsg));
+                        }
+                    }
+                    //Change color
+                    if (msgData.text.includes("./color")&&!ignored.includes(msgData.nick)){
                         myMsg = "/color " + msgData.text.replace("./color ", "");
                         myMsg = myMsg.toString();
                         sendMsg = {
@@ -30,14 +60,48 @@
                         };
                         userWebSocket.send(JSON.stringify(sendMsg));
                     }
-                    if (msgData.text.includes("./say")){
-                        myMsg = msgData.text.replace("./say", "");
+                    //Random number
+                    if (msgData.text.includes("./random")&&!ignored.includes(msgData.nick)){
+                        myMsg = msgData.text.replace("./random ", "");
+                        myMsg = Math.floor(Math.random()*Number(myMsg))+1;
+                        if (msgData.text == "./random"){
+                            myMsg = Math.random();
+                        }
                         myMsg = myMsg.toString();
                         sendMsg = {
                             "cmd": "chat",
                             "text": myMsg
                         };
                         userWebSocket.send(JSON.stringify(sendMsg));
+                    }
+                    //Ignore users from using commands
+                    if (msgData.text.includes("./ignore") && msgData.trip == "21YRcd"){
+                        myMsg = msgData.text.replace("./ignore ", "");
+                        ignored.push(myMsg);
+                        textOutput.innerText += "Ignoring " + myMsg + "\n";
+                    }
+                    //Remove users from ignore list
+                    if (msgData.text.includes("./accept") && msgData.trip == "21YRcd"){
+                        myMsg = msgData.text.replace("./accept", "");
+                        ignored.splice(ignored.indexOf(myMsg, 1));
+                        textOutput.innerText += "Accepting " + myMsg + "\n";
+                    }
+                    if (msgData.text == msgData.from + " whispered: check"){
+                        myMsg = {
+                            "cmd": "whisper",
+                            "nick": msgData.from,
+                            "text": "Sent"
+                        };
+                        userWebSocket.send(JSON.stringify(myMsg));
+                    }
+                    //Go AFK
+                    if (msgData.text.includes("./afk")){
+                        myMsg = {
+                            "cmd": "chat",
+                            "text": msgData.nick + " is AFK"
+                        };
+                        afkList.push(msgData.nick);
+                        userWebSocket.send(JSON.stringify(myMsg));
                     }
                 };
             }
@@ -49,5 +113,6 @@
         <label>Channel</label>
         <input id="channel">
         <button onclick="connect()">Start</button>
+        <h4 id="output"></h4>
     </body>
 </html>
