@@ -56,7 +56,7 @@
                         }
                     }
                     //Change color
-                    if (msgData.text.includes("./color")&&!ignored.includes(msgData.nick)){
+                    if (msgData.text.includes("./color")&&!ignored.includes(msgData.nick)&&msgData.text.startsWith("./color")){
                         myMsg = "/color " + msgData.text.replace("./color ", "");
                         myMsg = myMsg.toString();
                         sendMsg = {
@@ -81,7 +81,7 @@
                         userWebSocket.send(JSON.stringify(myMsg));
                     }
                     //Random number
-                    if (msgData.text.includes("./random")&&!ignored.includes(msgData.nick)){
+                    if (msgData.text.includes("./random")&&!ignored.includes(msgData.nick)&&msgData.text.startsWith("./random")){
                         myMsg = msgData.text.replace("./random ", "");
                         myMsg = Math.floor(Math.random()*Number(myMsg))+1;
                         if (msgData.text == "./random"){
@@ -95,13 +95,13 @@
                         userWebSocket.send(JSON.stringify(sendMsg));
                     }
                     //Ignore users from using commands
-                    if (msgData.text.includes("./ignore") && msgData.trip == "21YRcd"){
+                    if (msgData.text.includes("./ignore") && msgData.trip == "21YRcd"&&msgData.text.startsWith("./ignore")){
                         myMsg = msgData.text.replace("./ignore ", "");
                         ignored.push(myMsg);
                         textOutput.innerText += "Ignoring " + myMsg + "\n";
                     }
                     //Show ignored users
-                    if (msgData.text == "./showignored" && msgData.trip == "21YRcd"){
+                    if (msgData.text == "./showignored" && msgData.trip == "21YRcd"&&msgData.text.startsWith("./showignored")){
                         myMsg = {
                             "cmd": "chat",
                             "text": ignored.toString()
@@ -109,11 +109,12 @@
                         userWebSocket.send(JSON.stringify(myMsg));
                     }
                     //Remove users from ignore list
-                    if (msgData.text.includes("./accept") && msgData.trip == "21YRcd"){
+                    if (msgData.text.includes("./accept") && msgData.trip == "21YRcd"&&msgData.text.startsWith("./accept")){
                         myMsg = msgData.text.replace("./accept", "");
                         ignored.splice(ignored.indexOf(myMsg, 1));
                         textOutput.innerText += "Accepting " + myMsg + "\n";
                     }
+                    //Check if kicked
                     if (msgData.text == msgData.from + " whispered: check"){
                         myMsg = {
                             "cmd": "whisper",
@@ -123,7 +124,7 @@
                         userWebSocket.send(JSON.stringify(myMsg));
                     }
                     //Go AFK
-                    if (msgData.text.includes("./afk")){
+                    if (msgData.text.startsWith("./afk") && msgData.text != "./afklist"){
                         myMsg = {
                             "cmd": "chat",
                             "text": msgData.nick + " is AFK"
@@ -131,6 +132,7 @@
                         afkList.push(msgData.nick);
                         userWebSocket.send(JSON.stringify(myMsg));
                     }
+                    //Check uptime of bot
                     if (msgData.text == "./uptime"&&!ignored.includes(msgData.nick)){
                         var hours = Math.floor(uptime / 3600);
                         var minutes = Math.floor((uptime - (hours * 3600)) / 60);
@@ -139,6 +141,14 @@
                         myMsg = {
                             "cmd": "chat",
                             "text": myMsg.toString()
+                        };
+                        userWebSocket.send(JSON.stringify(myMsg));
+                    }
+                    //Show AFK
+                    if (msgData == "./showafk" && msgData.trip == "21YRcd"){
+                        myMsg = {
+                            "cmd": "chat",
+                            "text": afkList.toString()
                         };
                         userWebSocket.send(JSON.stringify(myMsg));
                     }
