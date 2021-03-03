@@ -60,7 +60,7 @@ ws.on('message', function incoming(event) {
         firstPacket = false;
     }
     //Check the most recent message
-    if (msgCmd == "chat" && !msgR.startsWith("./lastactive")) {
+    if (msgCmd == "chat" && !msgR.startsWith("./lastactive") && msgTrip != "/igodX") {
         packetRecTime = Date.now();
         lastMessage = msgNick + ": " + msgR;
     }
