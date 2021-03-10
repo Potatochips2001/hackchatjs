@@ -10,8 +10,8 @@ var getDataRec = "";
 
 sendJoin = {
     "cmd": "join",
-    "channel": "CHANNEL",
-    "nick": "NICK"
+    "channel": "channel",
+    "nick": "nick#pass"
 }
 
 const { Console } = require('console');
@@ -72,14 +72,10 @@ ws.on('message', function incoming(event) {
     }
     //Help
     if (msgR == "./help" && !ignored.includes(msgNick)) {
-        send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored" })
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
+        send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored" });
     }
     //Colors
     if (msgR.startsWith("./color") && !ignored.includes(msgNick)) {
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
         try {
             send({ "cmd": "chat", "text": "/color " + msgR.replace("./color ", "") });
         }
@@ -90,14 +86,10 @@ ws.on('message', function incoming(event) {
     //Set random colors on
     if (msgR == "./coloron" && !ignored.includes(msgNick)) {
         randomColors = true;
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Set random colors off
     if (msgR == "./coloroff" && !ignored.includes(msgNick)) {
         randomColors = false;
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Check if random colors should be used
     if (randomColors == true && msgR.startsWith("./")) {
@@ -113,8 +105,6 @@ ws.on('message', function incoming(event) {
     if (msgR.startsWith("./afk") && !msgR.includes("./afklist")) {
         afkList.push(msgNick);
         send({ "cmd": "chat", "text": msgNick + " is AFK" });
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Check if user is AFK when messaged
     for (var i = 0; i < afkList.length; i++){
@@ -125,13 +115,9 @@ ws.on('message', function incoming(event) {
     //Generate a random room
     if (msgR.startsWith("./channel") && !ignored.includes(msgNick)) {
         send({ "cmd": "chat", "text": "?" + Math.random().toString(36).substr(2, 8) });
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     if (msgR.includes(msgFrom + " whispered: ./channel")) {
         send({ "cmd": "whisper", "nick": msgFrom, "text": "?" + Math.random().toString(36).substr(2, 8) });
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Check if kicked
     if (msgR.includes(msgFrom + " whispered: kicked")) {
@@ -140,34 +126,24 @@ ws.on('message', function incoming(event) {
     //Show AFK users
     if (msgR == "./showafk" && msgTrip == "21YRcd") {
         send({ "cmd": "chat", "text": afkList.toString() });
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Show ignored users
     if (msgR == "./showignored" && msgTrip == "21YRcd") {
         send({ "cmd": "chat", "text": ignored.toString() });
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Ignore users
     if (msgR.startsWith("./ignore") && msgTrip == "21YRcd") {
         ignored.push(msgR.replace("./ignore ", ""));
         console.log("Ignoring user " + msgR.replace("./ignore ", ""));
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Accept users
     if (msgR.startsWith("./accept") && msgTrip == "21YRcd") {
         ignored.splice(ignored.indexOf(msgR.replace("./accept ", ""), 1));
         console.log("Accepting user " + msgR.replace("./accept ", ""));
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Show online users
     if (msgR.startsWith("./list") && !ignored.includes(msgNick)) {
         send({ "cmd": "chat", "text": usersOnline });
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
     }
     //Add user to online list after they join channel
     if (msgCmd == "onlineAdd") {
@@ -177,10 +153,16 @@ ws.on('message', function incoming(event) {
     if (msgCmd == "onlineRemove") {
         usersOnline = usersOnline.replace("," + msgNick, "");
     }
+    //Whisper when the chat was last active to the user that just joined
+    if (msgCmd == "onlineAdd") {
+        if (packetRecTime != null && packetRecTime > 0) {
+            let lastChatMessage = (Date.now() - packetRecTime);
+            lastActiveTime = String((lastChatMessage / 1000 / 60) + " Minutes");
+            send({ "cmd": "whisper", "nick": msgData.nick, "text": lastActiveTime + "\nLast received message: " + lastMessage });
+        }
+    }
     //Random number
     if (msgR.startsWith("./random") && !ignored.includes(msgNick)) {
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
         if (msgR == "./random") {
             send({ "cmd": "chat", "text": String(Math.random()) });
         }
@@ -190,8 +172,6 @@ ws.on('message', function incoming(event) {
     }
     //Print color
     if (msgR.startsWith("./printcolor") && !ignored.includes(msgNick)) {
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
         if (msgR == "./printcolor") {
             send({ "cmd": "chat", "text": "Enter a fucking hex value" });
         }
@@ -201,16 +181,17 @@ ws.on('message', function incoming(event) {
     }
     //Check when chat was last active
     if (msgR.startsWith("./lastactive") && !ignored.includes(msgNick)) {
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
-        let lastChatMessage = (Date.now() - packetRecTime);
-        lastActiveTime = String((lastChatMessage/1000/60) + " Minutes");
-        send({ "cmd": "chat", "text": lastActiveTime + "\nLast recieved message: " + lastMessage });
+        if (packetRecTime == null) {
+            send({ "cmd": "chat", "text": "No messages where recieved, yet..." });
+        }
+        else {
+            let lastChatMessage = (Date.now() - packetRecTime);
+            lastActiveTime = String((lastChatMessage / 1000 / 60) + " Minutes");
+            send({ "cmd": "chat", "text": lastActiveTime + "\nLast received message: " + lastMessage });
+        }
     }
     //Check uptime
     if (msgR.startsWith("./uptime") & !ignored.includes(msgNick)) {
-        //commandCounter++;
-        //process.stdout.write("\rTimes used: " + commandCounter);
         var hours = Math.floor(botUptime / 3600);
         var minutes = Math.floor((botUptime - (hours * 3600)) / 60);
         var seconds = botUptime - (hours * 3600) - (minutes * 60);
