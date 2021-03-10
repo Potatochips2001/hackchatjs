@@ -7,9 +7,10 @@ var afkList = [];
 let botUptime = 0.0;
 var randomColors = false;
 var getDataRec = "";
-var myNick = "name";
+var myNick = "nick";
 var myPass = "pass";
 var myChannel = "channel";
+var lastActiveRegistered = [];
 
 sendJoin = {
     "cmd": "join",
@@ -73,7 +74,7 @@ ws.on('message', function incoming(event) {
     //Check number of times bot was used
     if (msgR.startsWith("./")) {
         commandCounter++;
-        process.stdout.write("\rCommands used: " + commandCounter);
+        process.stdout.write("\rCommands used: " + commandCounter + "\tLast command used: " + msgR);
     }
     //Check the most recent message
     if (msgCmd == "chat" && !msgR.startsWith("./lastactive") && msgTrip != "/igodX") {
@@ -90,12 +91,12 @@ ws.on('message', function incoming(event) {
     }
     //Check if the current channel was moved
     if (msgChannel != myChannel) {
-        console.log("\nChannel was moved");
+        console.log("\nChannel was moved to " + msgChannel);
         process.exit();
     }
     //Help
     if (msgR == "./help" && !ignored.includes(msgNick)) {
-        send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored" });
+        send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nWhisper: ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored" });
     }
     //Colors
     if (msgR.startsWith("./color") && !ignored.includes(msgNick)) {
@@ -176,11 +177,22 @@ ws.on('message', function incoming(event) {
         usersOnline = usersOnline.replace("," + msgNick, "");
     }
     //Whisper when the chat was last active to the user that just joined
-    if (msgCmd == "onlineAdd") {
+    if (msgCmd == "onlineAdd" && lastActiveRegistered.includes(msgData.nick)) {
         if (packetRecTime != null && packetRecTime > 0) {
             let lastChatMessage = (Date.now() - packetRecTime);
             lastActiveTime = String((lastChatMessage / 1000 / 60) + " Minutes");
             send({ "cmd": "whisper", "nick": msgData.nick, "text": lastActiveTime + "\nLast received message: " + lastMessage });
+        }
+    }
+    //Register for last active check
+    if (msgR.includes(msgFrom + " whispered: ./lastactive")) {
+        if (lastActiveRegistered.includes(msgFrom)) {
+            lastActiveRegistered.splice(lastActiveRegistered.indexOf(msgFrom), 1);
+            send({ "cmd": "whisper", "nick": msgFrom, "text": "You will no longer be notified of the last message" });
+        }
+        else {
+            lastActiveRegistered.push(msgFrom);
+            send({ "cmd": "whisper", "nick": msgFrom, "text": "You will be whispered the last message once you join back" });
         }
     }
     //Random number
