@@ -7,11 +7,14 @@ var afkList = [];
 let botUptime = 0.0;
 var randomColors = false;
 var getDataRec = "";
+var myNick = "name";
+var myPass = "pass";
+var myChannel = "channel";
 
 sendJoin = {
     "cmd": "join",
-    "channel": "channel",
-    "nick": "name"
+    "channel": myChannel,
+    "nick": myNick + "#" + myPass
 }
 
 const { Console } = require('console');
@@ -43,6 +46,12 @@ ws.on('open', function open() {
 let firstPacket = true;
 setInterval(function () {
     botUptime++;
+    //Checking if channel was moved every five(5) minutes
+    if (botUptime % 300 == 0) {
+        try {
+            send({ "cmd": "whisper", "nick": myNick, "text": "null" });
+        } catch { console.log("\nCould not whisper to self"); }
+    }
 }, 1000);
 
 let packetRecTime = null;
@@ -64,7 +73,7 @@ ws.on('message', function incoming(event) {
     //Check number of times bot was used
     if (msgR.startsWith("./")) {
         commandCounter++;
-        process.stdout.write("\rCommands used: " + commandCounter + "\t" + msgChannel);
+        process.stdout.write("\rCommands used: " + commandCounter);
     }
     //Check the most recent message
     if (msgCmd == "chat" && !msgR.startsWith("./lastactive") && msgTrip != "/igodX") {
@@ -79,6 +88,11 @@ ws.on('message', function incoming(event) {
     if (msgCmd == "warn") {
         console.log("\nWarning: " + msgR);
     }
+    //Check if the current channel was moved
+    if (msgChannel != myChannel) {
+        console.log("\nChannel was moved");
+        process.exit();
+    }
     //Help
     if (msgR == "./help" && !ignored.includes(msgNick)) {
         send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored" });
@@ -88,9 +102,7 @@ ws.on('message', function incoming(event) {
         try {
             send({ "cmd": "chat", "text": "/color " + msgR.replace("./color ", "") });
         }
-        catch {
-            null
-        }
+        catch {}
     }
     //Set random colors on
     if (msgR == "./coloron" && !ignored.includes(msgNick)) {
@@ -144,12 +156,12 @@ ws.on('message', function incoming(event) {
     //Ignore users
     if (msgR.startsWith("./ignore") && msgTrip == "21YRcd") {
         ignored.push(msgR.replace("./ignore ", ""));
-        console.log("Ignoring user " + msgR.replace("./ignore ", ""));
+        console.log("\nIgnoring user " + msgR.replace("./ignore ", ""));
     }
     //Accept users
     if (msgR.startsWith("./accept") && msgTrip == "21YRcd") {
         ignored.splice(ignored.indexOf(msgR.replace("./accept ", ""), 1));
-        console.log("Accepting user " + msgR.replace("./accept ", ""));
+        console.log("\nAccepting user " + msgR.replace("./accept ", ""));
     }
     //Show online users
     if (msgR.startsWith("./list") && !ignored.includes(msgNick)) {
@@ -157,7 +169,7 @@ ws.on('message', function incoming(event) {
     }
     //Add user to online list after they join channel
     if (msgCmd == "onlineAdd") {
-        usersOnline += ", " + msgData.nick;
+        usersOnline += "," + msgData.nick;
     }
     //Remove user from online when they exit channel
     if (msgCmd == "onlineRemove") {
