@@ -11,7 +11,7 @@ var getDataRec = "";
 sendJoin = {
     "cmd": "join",
     "channel": "channel",
-    "nick": "nick#pass"
+    "nick": "name"
 }
 
 const { Console } = require('console');
@@ -56,6 +56,7 @@ ws.on('message', function incoming(event) {
     msgTrip = String(msgData.trip); //Trip of user
     msgFrom = String(msgData.from); //Who sent the message (use for whisper)
     msgCmd = String(msgData.cmd); //Command
+    msgChannel = String(msgData.channel); //Current channel
     if (firstPacket == true) {
         usersOnline = String(msgData.nicks);
         firstPacket = false;
@@ -63,12 +64,20 @@ ws.on('message', function incoming(event) {
     //Check number of times bot was used
     if (msgR.startsWith("./")) {
         commandCounter++;
-        process.stdout.write("\rCommands used: " + commandCounter);
+        process.stdout.write("\rCommands used: " + commandCounter + "\t" + msgChannel);
     }
     //Check the most recent message
     if (msgCmd == "chat" && !msgR.startsWith("./lastactive") && msgTrip != "/igodX") {
         packetRecTime = Date.now();
         lastMessage = msgNick + ": " + msgR;
+    }
+    //Checks who has been kicked or banned
+    if (msgR.startsWith("#!") || msgR.startsWith("#!")) {
+        console.log("\n" + msgNick + ": " + msgR);
+    }
+    //Check for warnings
+    if (msgCmd == "warn") {
+        console.log("\nWarning: " + msgR);
     }
     //Help
     if (msgR == "./help" && !ignored.includes(msgNick)) {
@@ -121,7 +130,8 @@ ws.on('message', function incoming(event) {
     }
     //Check if kicked
     if (msgR.includes(msgFrom + " whispered: kicked")) {
-        send({ "cmd": "whisper", "nick": msgFrom, "text": "Whisper recieved" });
+        send({ "cmd": "whisper", "nick": "x", "text": "." });
+        send({ "cmd": "whisper", "nick": msgFrom, "text": "Current channel name: " + msgChannel });
     }
     //Show AFK users
     if (msgR == "./showafk" && msgTrip == "21YRcd") {
@@ -147,7 +157,7 @@ ws.on('message', function incoming(event) {
     }
     //Add user to online list after they join channel
     if (msgCmd == "onlineAdd") {
-        usersOnline += "," + msgData.nick;
+        usersOnline += ", " + msgData.nick;
     }
     //Remove user from online when they exit channel
     if (msgCmd == "onlineRemove") {
