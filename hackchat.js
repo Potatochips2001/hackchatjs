@@ -74,7 +74,7 @@ ws.on('message', function incoming(event) {
     //Check number of times bot was used
     if (msgR.startsWith("./")) {
         commandCounter++;
-        process.stdout.write("\rCommands used: " + commandCounter + "\tLast command used: " + msgR);
+        process.stdout.write("\rCommands used: " + commandCounter);
     }
     //Check the most recent message
     if (msgCmd == "chat" && !msgR.startsWith("./lastactive") && msgTrip != "/igodX") {
@@ -87,7 +87,7 @@ ws.on('message', function incoming(event) {
     }
     //Check for warnings
     if (msgCmd == "warn") {
-        console.log("\nWarning: " + msgR);
+        console.log("\n\x1b[31mWarning: " + msgR + "\x1b[0m");
     }
     //Check if the current channel was moved
     if (msgChannel != myChannel) {
@@ -161,12 +161,12 @@ ws.on('message', function incoming(event) {
     //Ignore users
     if (msgR.startsWith("./ignore") && msgTrip == "21YRcd") {
         ignored.push(msgR.replace("./ignore ", ""));
-        console.log("\nIgnoring user " + msgR.replace("./ignore ", ""));
+        console.log("\nIgnoring user \x1b[31m" + msgR.replace("./ignore ", "") + "\x1b[0m");
     }
     //Accept users
     if (msgR.startsWith("./accept") && msgTrip == "21YRcd") {
         ignored.splice(ignored.indexOf(msgR.replace("./accept ", ""), 1));
-        console.log("\nAccepting user " + msgR.replace("./accept ", ""));
+        console.log("\nAccepting user \x1b[36m" + msgR.replace("./accept ", "") + "\x1b[0m");
     }
     //Show online users
     if (msgR.startsWith("./list") && !ignored.includes(msgNick)) {
