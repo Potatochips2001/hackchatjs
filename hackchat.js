@@ -96,7 +96,7 @@ ws.on('message', function incoming(event) {
     }
     //Help
     if (msgR == "./help" && !ignored.includes(msgNick)) {
-        send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nWhisper: ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored" });
+        send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nWhisper: ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored, ./showlastactive" });
     }
     //Colors
     if (msgR.startsWith("./color") && !ignored.includes(msgNick)) {
@@ -153,6 +153,10 @@ ws.on('message', function incoming(event) {
     //Show ignored users
     if (msgR == "./showignored" && msgTrip == "21YRcd") {
         send({ "cmd": "chat", "text": ignored.toString() });
+    }
+    //Show last active registered users
+    if (msgR == "./showlastactive" && msgTrip == "21YRcd") {
+        send({ "cmd": "chat", "text": lastActiveRegistered.toString() });
     }
     //Ignore users
     if (msgR.startsWith("./ignore") && msgTrip == "21YRcd") {
