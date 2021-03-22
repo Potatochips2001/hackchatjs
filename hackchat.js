@@ -7,10 +7,12 @@ var afkList = [];
 let botUptime = 0.0;
 var randomColors = false;
 var getDataRec = "";
-var myNick = "nick";
+var myNick = "name";
 var myPass = "pass";
 var myChannel = "channel";
 var lastActiveRegistered = [];
+let userMessagesList = {};
+var isLocked = false;
 
 sendJoin = {
     "cmd": "join",
@@ -95,22 +97,42 @@ ws.on('message', function incoming(event) {
         process.exit();
     }
     //Help
-    if (msgR == "./help" && !ignored.includes(msgNick)) {
-        send({ "cmd": "chat", "text": "$\\red{https://github.com/Potatochips2001/hackchatjs}$\nCommands: ./color, ./coloron, ./coloroff, ./random, ./afk, ./uptime, ./printcolor, ./channel, ./lastactive\nWhisper: ./channel, ./lastactive\nAdmin: ./ignore, ./accept, ./showafk, ./showignored, ./showlastactive" });
+    if (msgR == "./help" && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
+        send({
+            "cmd": "chat", "text": "$\\red{Owner: potatochips2001}$\n```txt\nCommands:\n./color [hex value]\n./coloron - turns on random colors\n./coloroff - turns off random colors\n./random - random number\n./afk - go AFK\n./uptime\n./printcolor [hex value]\n./channel - generate channel\n./lastactive - check when chat was last active\n./msg [user] [message]\nwhisper:\n./channel\n./lastactive - get whispered the last message when you join back\nAdmin commands:\n./ignore\n./accept\n./showafk\n./showignored\n./showlastactive\n./lock\n./unlock```" });
     }
     //Colors
-    if (msgR.startsWith("./color") && !ignored.includes(msgNick)) {
+    if (msgR.startsWith("./color ") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         try {
             send({ "cmd": "chat", "text": "/color " + msgR.replace("./color ", "") });
         }
         catch {}
     }
+    //Message user
+    if (msgR.startsWith("./msg ") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
+        var userToMessage = msgR.replace("./msg ", "");
+        userToMessage = userToMessage.substr(0, userToMessage.indexOf(" "));
+        messageToSendUser = msgR.replace("./msg ", "");
+        messageToSendUser = messageToSendUser.replace(userToMessage + " ", "");
+        userMessagesList[userToMessage] = msgNick + " says: " + messageToSendUser;
+        if (userToMessage in userMessagesList) { send({ "cmd": "chat", "text": userToMessage + " will receive your message soon..." }); }
+    }
+    //Check if user has any messages when they use chat
+    if (msgNick in userMessagesList) {
+        send({ "cmd": "chat", "text": "@" + msgNick + ", " + userMessagesList[msgNick] });
+        delete userMessagesList[msgNick];
+    }
+    //retard
+    if (msgR == "./msg") { send({ "cmd": "chat", "text": "You did retard" }); }
+    //Lock or unlock bot
+    if (msgR.startsWith("./lock") && msgTrip == "21YRcd") { isLocked = true; console.log("\n\x1b[31mBot locked\x1b[0m") }
+    if (msgR.startsWith("./unlock") && msgTrip == "21YRcd") { isLocked = false; console.log("\n\x1b[36mBot unlocked\x1b[0m") }
     //Set random colors on
-    if (msgR == "./coloron" && !ignored.includes(msgNick)) {
+    if (msgR == "./coloron" && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         randomColors = true;
     }
     //Set random colors off
-    if (msgR == "./coloroff" && !ignored.includes(msgNick)) {
+    if (msgR == "./coloroff" && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         randomColors = false;
     }
     //Check if random colors should be used
@@ -124,7 +146,7 @@ ws.on('message', function incoming(event) {
         send({ "cmd": "chat", "text": msgNick + " is no longer AFK" });
     }
     //Go AFK
-    if (msgR.startsWith("./afk") && !msgR.includes("./afklist")) {
+    if (msgR.startsWith("./afk") && !msgR.includes("./afklist") && (isLocked == false || msgTrip == "21YRcd")) {
         afkList.push(msgNick);
         send({ "cmd": "chat", "text": msgNick + " is AFK" });
     }
@@ -135,10 +157,10 @@ ws.on('message', function incoming(event) {
         }
     }
     //Generate a random room
-    if (msgR.startsWith("./channel") && !ignored.includes(msgNick)) {
+    if (msgR.startsWith("./channel") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         send({ "cmd": "chat", "text": "?" + Math.random().toString(36).substr(2, 8) });
     }
-    if (msgR.includes(msgFrom + " whispered: ./channel")) {
+    if (msgR.includes(msgFrom + " whispered: ./channel") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         send({ "cmd": "whisper", "nick": msgFrom, "text": "?" + Math.random().toString(36).substr(2, 8) });
     }
     //Check if kicked
@@ -161,15 +183,21 @@ ws.on('message', function incoming(event) {
     //Ignore users
     if (msgR.startsWith("./ignore") && msgTrip == "21YRcd") {
         ignored.push(msgR.replace("./ignore ", ""));
-        console.log("\nIgnoring user \x1b[31m" + msgR.replace("./ignore ", "") + "\x1b[0m");
+        console.log("\nIgnoring user: \x1b[31m" + msgR.replace("./ignore ", "") + "\x1b[0m");
+    }
+    if (msgR.startsWith("./ignore") && msgTrip != "21YRcd") {
+        send({ "cmd": "chat", "text": "You do not have permission to use this command" });
     }
     //Accept users
     if (msgR.startsWith("./accept") && msgTrip == "21YRcd") {
         ignored.splice(ignored.indexOf(msgR.replace("./accept ", ""), 1));
-        console.log("\nAccepting user \x1b[36m" + msgR.replace("./accept ", "") + "\x1b[0m");
+        console.log("\nAccepting user: \x1b[36m" + msgR.replace("./accept ", "") + "\x1b[0m");
+    }
+    if (msgR.startsWith("./accept") && msgTrip != "21YRcd") {
+        send({ "cmd": "chat", "text": "You do not have permission to use this command" });
     }
     //Show online users
-    if (msgR.startsWith("./list") && !ignored.includes(msgNick)) {
+    if (msgR.startsWith("./list") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         send({ "cmd": "chat", "text": usersOnline });
     }
     //Add user to online list after they join channel
@@ -187,9 +215,12 @@ ws.on('message', function incoming(event) {
             lastActiveTime = String((lastChatMessage / 1000 / 60) + " Minutes");
             send({ "cmd": "whisper", "nick": msgData.nick, "text": lastActiveTime + "\nLast received message: " + lastMessage });
         }
+        else {
+            send({ "cmd": "whisper", "nick": msgData.nick, "text": "No messages were received, yet..." });
+        }
     }
     //Register for last active check
-    if (msgR.includes(msgFrom + " whispered: ./lastactive")) {
+    if (msgR.includes(msgFrom + " whispered: ./lastactive") && !ignored.includes(msgFrom) && (isLocked == false || msgTrip == "21YRcd")) {
         if (lastActiveRegistered.includes(msgFrom)) {
             lastActiveRegistered.splice(lastActiveRegistered.indexOf(msgFrom), 1);
             send({ "cmd": "whisper", "nick": msgFrom, "text": "You will no longer be notified of the last message" });
@@ -200,7 +231,7 @@ ws.on('message', function incoming(event) {
         }
     }
     //Random number
-    if (msgR.startsWith("./random") && !ignored.includes(msgNick)) {
+    if (msgR.startsWith("./random") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         if (msgR == "./random") {
             send({ "cmd": "chat", "text": String(Math.random()) });
         }
@@ -209,7 +240,7 @@ ws.on('message', function incoming(event) {
         }
     }
     //Print color
-    if (msgR.startsWith("./printcolor") && !ignored.includes(msgNick)) {
+    if (msgR.startsWith("./printcolor") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         if (msgR == "./printcolor") {
             send({ "cmd": "chat", "text": "Enter a fucking hex value" });
         }
@@ -218,7 +249,7 @@ ws.on('message', function incoming(event) {
         }
     }
     //Check when chat was last active
-    if (msgR.startsWith("./lastactive") && !ignored.includes(msgNick)) {
+    if (msgR.startsWith("./lastactive") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         if (packetRecTime == null) {
             send({ "cmd": "chat", "text": "No messages where recieved, yet..." });
         }
@@ -229,7 +260,7 @@ ws.on('message', function incoming(event) {
         }
     }
     //Check uptime
-    if (msgR.startsWith("./uptime") & !ignored.includes(msgNick)) {
+    if (msgR.startsWith("./uptime") & !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         var hours = Math.floor(botUptime / 3600);
         var minutes = Math.floor((botUptime - (hours * 3600)) / 60);
         var seconds = botUptime - (hours * 3600) - (minutes * 60);
