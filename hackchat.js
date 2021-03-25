@@ -110,11 +110,13 @@ ws.on('message', function incoming(event) {
     }
     //Message user
     if (msgR.startsWith("./msg ") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
+        var d = new Date();
+        d = d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
         var userToMessage = msgR.replace("./msg ", "");
         userToMessage = userToMessage.substr(0, userToMessage.indexOf(" "));
         messageToSendUser = msgR.replace("./msg ", "");
         messageToSendUser = messageToSendUser.replace(userToMessage + " ", "");
-        messageToSendUser = (msgNick + " says: " + messageToSendUser + "\n");
+        messageToSendUser = (msgNick + " says: " + messageToSendUser + " (" + d + ") + "\n");
         if (userMessagesList[userToMessage] === undefined) {userMessagesList[userToMessage] = ""}
         userMessagesList[userToMessage] += messageToSendUser;
         if (userToMessage in userMessagesList) { send({ "cmd": "chat", "text": userToMessage + " will receive your message soon..." }); }
@@ -262,7 +264,7 @@ ws.on('message', function incoming(event) {
         }
     }
     //Check uptime
-    if (msgR.startsWith("./uptime") & !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
+    if (msgR.startsWith("./uptime") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         var hours = Math.floor(botUptime / 3600);
         var minutes = Math.floor((botUptime - (hours * 3600)) / 60);
         var seconds = botUptime - (hours * 3600) - (minutes * 60);
