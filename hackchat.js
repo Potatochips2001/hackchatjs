@@ -116,7 +116,7 @@ ws.on('message', function incoming(event) {
         userToMessage = userToMessage.substr(0, userToMessage.indexOf(" "));
         messageToSendUser = msgR.replace("./msg ", "");
         messageToSendUser = messageToSendUser.replace(userToMessage + " ", "");
-        messageToSendUser = (msgNick + " says: " + messageToSendUser + " (" + d + ") + "\n");
+        messageToSendUser = (msgNick + " says: " + messageToSendUser + " (" + d + ")" + "\n");
         if (userMessagesList[userToMessage] === undefined) {userMessagesList[userToMessage] = ""}
         userMessagesList[userToMessage] += messageToSendUser;
         if (userToMessage in userMessagesList) { send({ "cmd": "chat", "text": userToMessage + " will receive your message soon..." }); }
