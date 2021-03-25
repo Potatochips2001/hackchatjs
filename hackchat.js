@@ -99,7 +99,7 @@ ws.on('message', function incoming(event) {
     //Help
     if (msgR == "./help" && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
         send({
-            "cmd": "chat", "text": "$\\red{Owner: potatochips2001}$\n```txt\nCommands:\n./color [hex value]\n./coloron - turns on random colors\n./coloroff - turns off random colors\n./random - random number\n./afk - go AFK\n./uptime\n./printcolor [hex value]\n./channel - generate channel\n./lastactive - check when chat was last active\n./msg [user] [message]\nwhisper:\n./channel\n./lastactive - get whispered the last message when you join back\nAdmin commands:\n./ignore\n./accept\n./showafk\n./showignored\n./showlastactive\n./lock\n./unlock```" });
+            "cmd": "chat", "text": "Commands: ./color ./coloron ./coloroff ./random ./afk ./uptime ./printcolor ./channel ./lastactive ./msg\nwhisper: ./channel ./lastactive Admin commands: ./ignore ./accept ./showafk ./showignored ./showlastactive ./lock ./unlock" });
     }
     //Colors
     if (msgR.startsWith("./color ") && !ignored.includes(msgNick) && (isLocked == false || msgTrip == "21YRcd")) {
@@ -114,7 +114,9 @@ ws.on('message', function incoming(event) {
         userToMessage = userToMessage.substr(0, userToMessage.indexOf(" "));
         messageToSendUser = msgR.replace("./msg ", "");
         messageToSendUser = messageToSendUser.replace(userToMessage + " ", "");
-        userMessagesList[userToMessage] = msgNick + " says: " + messageToSendUser;
+        messageToSendUser = (msgNick + " says: " + messageToSendUser + "\n");
+        if (userMessagesList[userToMessage] === undefined) {userMessagesList[userToMessage] = ""}
+        userMessagesList[userToMessage] += messageToSendUser;
         if (userToMessage in userMessagesList) { send({ "cmd": "chat", "text": userToMessage + " will receive your message soon..." }); }
     }
     //Check if user has any messages when they use chat
@@ -123,7 +125,7 @@ ws.on('message', function incoming(event) {
         delete userMessagesList[msgNick];
     }
     //retard
-    if (msgR == "./msg") { send({ "cmd": "chat", "text": "You did retard" }); }
+    if (msgR == "./msg") { send({ "cmd": "chat", "text": "retardation" }); }
     //Lock or unlock bot
     if (msgR.startsWith("./lock") && msgTrip == "21YRcd") { isLocked = true; console.log("\n\x1b[31mBot locked\x1b[0m") }
     if (msgR.startsWith("./unlock") && msgTrip == "21YRcd") { isLocked = false; console.log("\n\x1b[36mBot unlocked\x1b[0m") }
