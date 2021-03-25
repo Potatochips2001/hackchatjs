@@ -11,7 +11,7 @@ var myNick = "name";
 var myPass = "pass";
 var myChannel = "channel";
 var lastActiveRegistered = [];
-let userMessagesList = {};
+let userMessagesList = Object.create(null);
 var isLocked = false;
 
 sendJoin = {
